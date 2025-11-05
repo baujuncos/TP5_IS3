@@ -14,7 +14,7 @@
             <div class="alert alert-danger">@errorMessage</div>
         }
 
-        <EditForm Model="registerRequest" OnValidSubmit="HandleRegister">
+        <EditForm Model="registerRequest" OnValidSubmit="HandleRegister" FormName="RegisterForm">
             <div class="form-group">
                 <label>Username</label>
                 <InputText @bind-Value="registerRequest.Username" class="form-control" />
