@@ -174,3 +174,39 @@ Colores actualizados con éxito:
 
 Vuelvo a mis colores de antes que me gustan m+as:
 ![alt text](image-31.png)
+
+
+## Healthcheck
+
+Incluimos healthcheck en QA y PROD en el pipeline donde usamos nuestro endpoint predeterminado del proyecto llamandolo como "api/health". El codigo a aplicar en la stage de deploy de ambos QA y PROD es el siguiente (siendo análogo para PROD):
+
+                - script: |
+                    echo "Waiting for health endpoint to respond..."
+                    url="https://webapp-tp05-qa-juncos-treachi-fqa5gug9addretfg.canadacentral-01.azurewebsites.net/api/health"
+                    timeout=120    # segundos totales
+                    interval=5     # intervalo entre intentos
+                    elapsed=0
+                    until curl -sSf "$url" > /dev/null; do
+                      sleep $interval
+                      elapsed=$((elapsed + interval))
+                      echo "Waiting... ${elapsed}s elapsed"
+                      if [ $elapsed -ge $timeout ]; then
+                        echo "Health check timed out after ${timeout}s"
+                        exit 1
+                      fi
+                    done
+                    echo "Health endpoint is OK: $url"
+                  displayName: 'Wait for /api/health (QA)'
+                  condition: succeeded()
+
+### Ejecución de healthcheck en QA con éxito:
+![alt text](image-32.png)
+
+### Corroboramos clickeando en la url que nos entrega:
+![alt text](<Captura de pantalla 2025-11-06 145215.png>)
+
+### Ejecución de healthcheck en PROD con éxito:
+![alt text](image-33.png)
+
+### Corroboramos clickeando en la url que nos entrega:
+![alt text](image-34.png)
