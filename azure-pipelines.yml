@@ -73,6 +73,25 @@ stages:
                     runtimeStack: 'NODE|18-lts'
                     startUpCommand: 'npm start'
 
+                - script: |
+                    echo "Waiting for health endpoint to respond..."
+                    url="https://webapp-tp05-qa-juncos-treachi-fqa5gug9addretfg.canadacentral-01.azurewebsites.net/api/health"
+                    timeout=120    # segundos totales
+                    interval=5     # intervalo entre intentos
+                    elapsed=0
+                    until curl -sSf "$url" > /dev/null; do
+                      sleep $interval
+                      elapsed=$((elapsed + interval))
+                      echo "Waiting... ${elapsed}s elapsed"
+                      if [ $elapsed -ge $timeout ]; then
+                        echo "Health check timed out after ${timeout}s"
+                        exit 1
+                      fi
+                    done
+                    echo "Health endpoint is OK: $url"
+                  displayName: 'Wait for /api/health (QA)'
+                  condition: succeeded()
+
   - stage: DeployPROD
     displayName: 'Deploy to PROD'
     dependsOn: DeployQA
@@ -102,3 +121,22 @@ stages:
                     package: '$(System.ArtifactsDirectory)/drop/$(Build.BuildId).zip'
                     runtimeStack: 'NODE|18-lts'
                     startUpCommand: 'npm start'
+
+                - script: |
+                    echo "Waiting for health endpoint to respond..."
+                    url="https://webapp-tp05-prod-juncos-treachi-h4gvbre3a6hphbh3.canadacentral-01.azurewebsites.net/api/health"
+                    timeout=120    # segundos totales
+                    interval=5     # intervalo entre intentos
+                    elapsed=0
+                    until curl -sSf "$url" > /dev/null; do
+                      sleep $interval
+                      elapsed=$((elapsed + interval))
+                      echo "Waiting... ${elapsed}s elapsed"
+                      if [ $elapsed -ge $timeout ]; then
+                        echo "Health check timed out after ${timeout}s"
+                        exit 1
+                      fi
+                    done
+                    echo "Health endpoint is OK: $url"
+                  displayName: 'Wait for /api/health (PROD)'
+                  condition: succeeded()

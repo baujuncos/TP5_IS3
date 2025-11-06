@@ -36,9 +36,30 @@ app.use(express.static('public'));
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 
-// Health check endpoint
+// Health check endpoint (mejorado — verifica DB)
+const { db } = require('./src/config/database'); // Asegurate que la ruta sea correcta según tu proyecto
+
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+  // Comprueba que la base de datos responda
+  db.get('SELECT 1 as ok', [], (err, row) => {
+    if (err) {
+      console.error('Healthcheck DB error:', err);
+      return res.status(500).json({
+        status: 'error',
+        message: 'DB connection failed',
+        details: err.message
+      });
+    }
+
+    // Opcional: devolver versión, uptime, etc.
+    res.json({
+      status: 'ok',
+      message: 'Server is running',
+      db: row && row.ok === 1 ? 'ok' : 'unknown',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    });
+  });
 });
 
 // Serve index.html for all other non-API routes (SPA)
