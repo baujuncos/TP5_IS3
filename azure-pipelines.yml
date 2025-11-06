@@ -7,7 +7,6 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  group: 'QA-Variables'
   buildConfiguration: 'Release'
   nodeVersion: '18.x'
   azureSubscription: 'azure-tp05-connection2'
@@ -74,3 +73,32 @@ stages:
                     runtimeStack: 'NODE|18-lts'
                     startUpCommand: 'npm start'
 
+  - stage: DeployPROD
+    displayName: 'Deploy to PROD'
+    dependsOn: DeployQA
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployToAzurePROD
+        displayName: 'Deploy to PROD'
+        environment: 'PROD-tp5'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadBuildArtifacts@1
+                  displayName: 'Download Artifacts'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(System.ArtifactsDirectory)'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to PROD'
+                  inputs:
+                    azureSubscription: '$(AzureSubscription)'
+                    appType: 'webApp'
+                    appName: 'webapp-tp05-prod-juncos-treachi'
+                    package: '$(System.ArtifactsDirectory)/drop/$(Build.BuildId).zip'
+                    runtimeStack: 'NODE|18-lts'
+                    startUpCommand: 'npm start'
